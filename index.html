@@ -31,17 +31,29 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // Variable para almacenar el marcador actual
+        // Variables para almacenar el marcador y el círculo actuales
         var currentMarker;
+        var currentCircle;
 
         // Función para dibujar un punto en el mapa
-        function drawPoint(lat, lon, label) {
+        function drawPoint(lat, lon, label, radius) {
             // Si hay un marcador existente, eliminarlo
             if (currentMarker) {
                 map.removeLayer(currentMarker);
             }
+            if (currentCircle) {
+                map.removeLayer(currentCircle);
+            }
+
+            // Añadir nuevo marcador y círculo
             currentMarker = L.marker([lat, lon]).addTo(map)
                 .bindPopup(label).openPopup();
+            currentCircle = L.circle([lat, lon], {
+                radius: radius,
+                color: 'blue',
+                fillColor: 'blue',
+                fillOpacity: 0.2
+            }).addTo(map);
         }
 
         function onLocationError(e) {
@@ -50,19 +62,16 @@
 
         function onLocationFound(e) {
             var radius = e.accuracy / 2;
-            drawPoint(e.latlng.lat, e.latlng.lng, " point ");
-            L.circle(e.latlng, radius).addTo(map);
+            drawPoint(e.latlng.lat, e.latlng.lng, " point", radius);
         }
 
         map.on('locationfound', onLocationFound);
         map.on('locationerror', onLocationError);
 
-        map.locate({setView: true, maxZoom: 16, watch: true});
-
-        // Ejemplo de dibujar un punto manualmente después de 3 segundos
-        // setTimeout(() => {
-        //     drawPoint(4.6170112, -74.1310464, "Ubicación en mi casa"); 
-        // }, 3000);
+        // Llamar a la función de ubicación cada segundo
+        setInterval(() => {
+            map.locate({setView: true, maxZoom: 16});
+        }, 1000);
     </script>
 </body>
 </html>
