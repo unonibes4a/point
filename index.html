@@ -1,77 +1,113 @@
 <!DOCTYPE html>
+
 <html>
-<head>
-    <title>Mapa con Ubicación en Tiempo Real</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-        #map {
-            height: 100vh;
-            width: 100vw;
-            margin: 0;
-            padding: 0;
-        }
-        body, html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-    </style>
-</head>
-<body>
-    <div id="map"></div>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script>
-        // Crear el mapa
-        var map = L.map('map').setView([51.505, -0.09], 13);
+	<head>
+		<title>nunuStudio</title>
+		<meta charset="UTF-8">
+		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"/>
+	</head>
 
-   
-        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+	<body style="background-color: #222222" onload="run();" onresize="resize();" oncontextmenu="return false;">
+		<!--nunuStudio lib-->
+		<script type="text/javascript" src="nunu.min.js"></script>
 
- 
-        var currentMarker;
-        var currentCircle;
+		<!--App code-->
+		<script type="text/javascript">
+			var app;
 
-      
-        function drawPoint(lat, lon, label, radius) {
-            
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-            }
-            if (currentCircle) {
-                map.removeLayer(currentCircle);
-            }
+			// Initialize app
+			function run()
+			{
+				// Create app object
+				app = new Nunu.App();
 
-            // Añadir nuevo marcador y círculo
-            currentMarker = L.marker([lat, lon]).addTo(map)
-                .bindPopup(label).openPopup();
-            currentCircle = L.circle([lat, lon], {
-                radius: radius,
-                color: 'blue',
-                fillColor: 'blue',
-                fillOpacity: 0.05
-            }).addTo(map);
-        }
+				// Onload enable the vr and fullscreen buttons
+				var logo = document.getElementById("logo");
+				var onLoad = function()
+				{
+					var button = document.getElementById("fullscreen");
+					button.style.visibility = "visible";
 
-        function onLocationError(e) {
-            alert(e.message);
-        }
+					// Check if VR is available
+					if(app.vrAvailable())
+					{
+						button = document.getElementById("vr");
+						button.style.visibility = "visible";
+					}
 
-        function onLocationFound(e) {
-            var radius = e.accuracy / 2;
-            drawPoint(e.latlng.lat, e.latlng.lng, " point", radius);
-        }
+					// Check if AR is available
+					if(app.arAvailable())
+					{
+						button = document.getElementById("ar");
+						button.style.visibility = "visible";
+					}
 
-        map.on('locationfound', onLocationFound);
-        map.on('locationerror', onLocationError);
+					// Remove logo and loading bar
+					document.body.removeChild(logo);
+				};
 
- 
-        setInterval(() => {
-            map.locate({setView: true, maxZoom: 23});
-        }, 1000);
-    </script>
-</body>
+				// On progress callback
+				var bar = document.getElementById("bar");
+				var onProgress = function(event)
+				{
+					if(event.lengthComputable)
+					{
+						var progress = event.loaded / event.total * 100;
+						bar.style.width = progress + "%";
+					}
+				};
+
+				// Load and run app
+				app.loadRunProgram("app.nsp", onLoad, onProgress);
+			}
+
+			// Resize app (must be called every time the window is resized)
+			function resize()
+			{
+				app.resize();
+			}
+
+			// Toggle fullscreen mode
+			function toggleFullscreen()
+			{
+				app.toggleFullscreen(document.body);
+			}
+
+			// Toggle VR mode
+			function toggleVR()
+			{
+				app.toggleVR();
+			}
+
+			// Toggle AR mode
+			function toggleAR()
+			{
+				app.toggleAR();
+			}
+		</script>
+
+		<!--Fullscreen button-->
+		<div id="fullscreen" onclick="toggleFullscreen();" style="visibility:hidden; position:absolute; z-index:10000; right:30px; bottom:30px">
+			<img style="position:absolute; cursor:pointer; opacity:0.4; width:25px; height:25px" src="fullscreen.png" onmouseenter="this.style.opacity = 1.0;" onmouseleave="this.style.opacity=0.4;">
+		</div>
+
+		<!--VR button-->
+		<div id="vr" onclick="toggleVR();" style="visibility:hidden; position:absolute; z-index:10000; right:70px; bottom:30px">
+			<img style="position:absolute; cursor:pointer; opacity:0.4; width:25px; height:25px" src="vr.png" onmouseenter="this.style.opacity = 1.0;" onmouseleave="this.style.opacity=0.4;">
+		</div>
+
+		<!--AR button-->
+		<div id="ar" onclick="toggleAR();" style="visibility:hidden; position:absolute; z-index:10000; right:110px; bottom:30px">
+			<img style="position:absolute; cursor:pointer; opacity:0.4; width:25px; height:25px" src="ar.png" onmouseenter="this.style.opacity = 1.0;" onmouseleave="this.style.opacity=0.4;">
+		</div>
+
+		<!--Logo-->
+		<div id="logo" style="position:absolute; width:50%; left:25%; top:35%">
+			<img src="logo.png" style="width:100%;">
+			<!--Loading bar-->
+			<div style="position:absolute; width:100%; height:7%; left:0%; top:120%; border-style:solid; border-color:#FFFFFF; border-width:2px">
+				<div id="bar" style="position:absolute; width:0%; height:100%; left:0%; top:0%; background-color:#FFFFFF"></div>
+			</div>
+		</div>
+	</body>
 </html>
